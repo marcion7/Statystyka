@@ -16,6 +16,59 @@ BEGIN
 END;
 /
 -----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE NBestSellingGames(
+  p_number_of_games IN NUMBER,
+  p_year IN NUMBER DEFAULT NULL
+) IS
+  v_game_name game_sales.game_name%TYPE;
+  v_total_sales NUMBER;
+  v_release_date game_sales.release_date%TYPE;
+  v_platform_name platforms.platform_name%TYPE;
+  v_publisher_name publishers.publisher_name%TYPE;
+  v_developer_name developers.developer_name%TYPE;
+  v_sql VARCHAR2(1000);
+  v_cursor SYS_REFCURSOR;
+  v_counter NUMBER := 0;
+BEGIN
+  v_sql := 'SELECT gs.game_name, TotalSales(gs.game_id), gs.release_date, plat.platform_name, pub.publisher_name, dev.developer_name
+            FROM game_sales gs, platforms plat, publishers pub, developers dev
+            WHERE plat.platform_id = gs.platform_id
+            AND pub.publisher_id = gs.publisher_id
+            AND dev.developer_id = gs.developer_id';
+
+  IF p_year IS NOT NULL THEN
+    v_sql := v_sql || ' AND gs.release_date = :p_year';
+  END IF;
+
+  v_sql := v_sql || ' ORDER BY TotalSales(gs.game_id) DESC FETCH FIRST :p_number_of_games ROWS ONLY';
+
+  IF p_year IS NOT NULL THEN
+    OPEN v_cursor FOR v_sql USING p_year, p_number_of_games;
+  ELSE
+    OPEN v_cursor FOR v_sql USING p_number_of_games;
+  END IF;
+
+  LOOP
+    FETCH v_cursor INTO v_game_name, v_total_sales, v_release_date, v_platform_name, v_publisher_name, v_developer_name;
+    EXIT WHEN v_cursor%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE('Game: ' || v_game_name || ', Total Sales: ' || v_total_sales || ', Release Date: ' || v_release_date || ', Platform: ' || v_platform_name || ', Publisher: ' || v_publisher_name || ', Developer: ' || v_developer_name);
+    v_counter := v_counter + 1;
+  END LOOP;
+
+  IF v_counter = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('Nie znaleziono gier dla podanego roku.');
+  ELSIF v_counter < p_number_of_games THEN
+    DBMS_OUTPUT.PUT_LINE('Podana liczba gier jest za duża. Znaleziono tylko ' || v_counter || ' gier.');
+  END IF;
+
+  CLOSE v_cursor;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('Nie znaleziono danych.');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Wystąpił błąd: ' || SQLERRM);
+END NBestSellingGames;
+-----------------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE GenerateAnnualSummary (p_year NUMBER) AS
 BEGIN
   INSERT INTO GAME_SALES_ANNUAL_SUMMARY (

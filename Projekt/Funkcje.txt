@@ -4,7 +4,7 @@ RETURN NUMBER IS
 BEGIN
   SELECT COUNT(*) INTO game_count
   FROM game_sales
-  WHERE EXTRACT(YEAR FROM release_date) = year;
+  WHERE release_date = year;
 
   RETURN game_count;
 END CountGamesInYear;
@@ -27,3 +27,91 @@ CREATE OR REPLACE FUNCTION TotalSales(g_id IN NUMBER) RETURN NUMBER IS
             RAISE_APPLICATION_ERROR(-20002, 'Brak danych dla podanego ID');
 END;
 /
+-----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION CountDeveloperGames(dev_id IN NUMBER, v_year IN NUMBER DEFAULT NULL)
+RETURN NUMBER IS
+  game_count NUMBER;
+  developer_exists NUMBER;
+  year_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO developer_exists
+    FROM game_sales
+    WHERE developer_id = dev_id;
+
+    IF developer_exists = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Developer o podanym ID nie istnieje.');
+        RAISE_APPLICATION_ERROR(-20005, 'Developer o podanym ID nie istnieje.');
+    END IF;
+    
+  IF v_year IS NOT NULL THEN
+    SELECT COUNT(*) INTO year_exists
+    FROM game_sales
+    WHERE release_date = v_year;
+
+    IF year_exists = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('Nie ma gier wydanych w podanym roku.');
+      RAISE_APPLICATION_ERROR(-20006, 'Nie ma gier wydanych w podanym roku.');
+    END IF;
+    
+    SELECT COUNT(*) INTO game_count
+    FROM game_sales
+    WHERE developer_id = dev_id AND release_date = v_year;
+
+  ELSE
+    SELECT COUNT(*) INTO game_count
+    FROM game_sales
+    WHERE developer_id = dev_id;
+  END IF;
+  
+  RETURN game_count;
+  
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+
+  RETURN game_count;
+END CountDeveloperGames;
+-----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION CountPublisherGames(pub_id IN NUMBER, v_year IN NUMBER DEFAULT NULL)
+RETURN NUMBER IS
+  game_count NUMBER;
+  publisher_exists NUMBER;
+  year_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO publisher_exists
+    FROM game_sales
+    WHERE publisher_id = pub_id;
+
+    IF publisher_exists = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Wydawca o podanym ID nie istnieje.');
+        RAISE_APPLICATION_ERROR(-20005, 'Wydawca o podanym ID nie istnieje.');
+    END IF;
+    
+  IF v_year IS NOT NULL THEN
+    SELECT COUNT(*) INTO year_exists
+    FROM game_sales
+    WHERE release_date = v_year;
+
+    IF year_exists = 0 THEN
+      DBMS_OUTPUT.PUT_LINE('Nie ma gier wydanych w podanym roku.');
+      RAISE_APPLICATION_ERROR(-20006, 'Nie ma gier wydanych w podanym roku.');
+    END IF;
+    
+    SELECT COUNT(*) INTO game_count
+    FROM game_sales
+    WHERE publisher_id = pub_id AND release_date = v_year;
+
+  ELSE
+    SELECT COUNT(*) INTO game_count
+    FROM game_sales
+    WHERE publisher_id = pub_id;
+  END IF;
+  
+  RETURN game_count;
+  
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+
+  RETURN game_count;
+END CountPublisherGames;
