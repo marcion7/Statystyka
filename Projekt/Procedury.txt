@@ -1,0 +1,83 @@
+CREATE OR REPLACE PROCEDURE FindGame(search_string IN VARCHAR2) as
+  v_cursor SYS_REFCURSOR;
+  v_game_id game_sales.game_id%TYPE;
+  v_game_name game_sales.game_name%TYPE;
+BEGIN
+  OPEN v_cursor FOR
+    SELECT game_id, game_name
+    FROM game_sales
+    WHERE UPPER(game_name) LIKE '%' || UPPER(search_string) || '%';
+    LOOP
+        FETCH v_cursor INTO v_game_id, v_game_name;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('Game ID: ' || v_game_id || ', Name: ' || v_game_name);
+    END LOOP;
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE GenerateAnnualSummary (p_year NUMBER) AS
+BEGIN
+  INSERT INTO GAME_SALES_ANNUAL_SUMMARY (
+    SUMMARY_ID, 
+    YEAR, 
+    BEST_SELLING_NA, 
+    BEST_SELLING_NA_SALES, 
+    BEST_SELLING_EU, 
+    BEST_SELLING_EU_SALES, 
+    BEST_SELLING_JP, 
+    BEST_SELLING_JP_SALES, 
+    BEST_SELLING_TOTAL, 
+    BEST_SELLING_TOTAL_SALES, 
+    NUMER_OF_GAMES, 
+    DEVELOPER_WITH_MOST_GAMES, 
+    DEVELOPER_WITH_MOST_GAMES_NUMBER, 
+    PUBLISHER_WITH_MOST_SOLD_GAMES, 
+    PUBLISHER_WITH_MOST_SOLD_GAMES_NUMBER, 
+    MOST_POPULAR_PLATFORM, 
+    MOST_POPULAR_GENRE
+  )
+  SELECT 
+    SUMMARY_SEQ.NEXTVAL, 
+    p_year, 
+    (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY NA_SALES DESC FETCH FIRST 1 ROW ONLY), 
+    (SELECT MAX(NA_sales) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY EU_SALES DESC FETCH FIRST 1 ROW ONLY), 
+    (SELECT MAX(EU_sales) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY JP_SALES DESC FETCH FIRST 1 ROW ONLY), 
+    (SELECT MAX(JP_sales) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY (NA_Sales + EU_Sales + JP_Sales + Other_Sales) DESC FETCH FIRST 1 ROW ONLY), 
+    (SELECT (NA_Sales + EU_Sales + JP_Sales + Other_Sales) AS Total_Sales FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY Total_Sales DESC FETCH FIRST 1 ROW ONLY), 
+    (SELECT COUNT(*) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    (SELECT developer_name from developers WHERE developer_id = (SELECT developer_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY developer_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY)), 
+    (SELECT COUNT(*) FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY developer_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY), 
+    (SELECT publisher_name from publishers WHERE publisher_id = (SELECT publisher_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY publisher_id ORDER BY SUM(NA_Sales + EU_Sales + JP_Sales + Other_Sales) DESC FETCH FIRST 1 ROW ONLY)), 
+    (SELECT SUM(NA_Sales + EU_Sales + JP_Sales + Other_Sales) FROM game_sales WHERE RELEASE_DATE = p_year AND publisher_id = (SELECT publisher_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY publisher_id ORDER BY SUM(NA_Sales + EU_Sales + JP_Sales + Other_Sales) DESC FETCH FIRST 1 ROW ONLY)), 
+    (SELECT platform_name from platforms where platform_id = (SELECT platform_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY platform_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY)), 
+    (SELECT genre_name from genres where genre_id = (SELECT genre_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY genre_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY))
+  FROM dual;
+COMMIT;
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyAnnualSummary (p_year NUMBER) AS
+BEGIN
+  UPDATE GAME_SALES_ANNUAL_SUMMARY
+  SET 
+    BEST_SELLING_NA = (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY NA_SALES DESC FETCH FIRST 1 ROW ONLY), 
+    BEST_SELLING_NA_SALES = (SELECT MAX(NA_sales) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    BEST_SELLING_EU = (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY EU_SALES DESC FETCH FIRST 1 ROW ONLY), 
+    BEST_SELLING_EU_SALES = (SELECT MAX(EU_sales) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    BEST_SELLING_JP = (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY JP_SALES DESC FETCH FIRST 1 ROW ONLY), 
+    BEST_SELLING_JP_SALES = (SELECT MAX(JP_sales) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    BEST_SELLING_TOTAL = (SELECT game_name FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY (NA_Sales + EU_Sales + JP_Sales + Other_Sales) DESC FETCH FIRST 1 ROW ONLY), 
+    BEST_SELLING_TOTAL_SALES = (SELECT (NA_Sales + EU_Sales + JP_Sales + Other_Sales) AS Total_Sales FROM game_sales WHERE RELEASE_DATE = p_year ORDER BY Total_Sales DESC FETCH FIRST 1 ROW ONLY), 
+    NUMER_OF_GAMES = (SELECT COUNT(*) FROM game_sales WHERE RELEASE_DATE = p_year), 
+    DEVELOPER_WITH_MOST_GAMES = (SELECT developer_name from developers WHERE developer_id = (SELECT developer_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY developer_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY)), 
+    DEVELOPER_WITH_MOST_GAMES_NUMBER = (SELECT COUNT(*) FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY developer_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY), 
+    PUBLISHER_WITH_MOST_SOLD_GAMES = (SELECT publisher_name from publishers WHERE publisher_id = (SELECT publisher_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY publisher_id ORDER BY SUM(NA_Sales + EU_Sales + JP_Sales + Other_Sales) DESC FETCH FIRST 1 ROW ONLY)), 
+    PUBLISHER_WITH_MOST_SOLD_GAMES_NUMBER = (SELECT SUM(NA_Sales + EU_Sales + JP_Sales + Other_Sales) FROM game_sales WHERE RELEASE_DATE = p_year AND publisher_id = (SELECT publisher_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY publisher_id ORDER BY SUM(NA_Sales + EU_Sales + JP_Sales + Other_Sales) DESC FETCH FIRST 1 ROW ONLY)), 
+    MOST_POPULAR_PLATFORM = (SELECT platform_name from platforms where platform_id = (SELECT platform_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY platform_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY)), 
+    MOST_POPULAR_GENRE = (SELECT genre_name from genres where genre_id = (SELECT genre_id FROM game_sales WHERE RELEASE_DATE = p_year GROUP BY genre_id ORDER BY COUNT(*) DESC FETCH FIRST 1 ROW ONLY))
+  WHERE YEAR = p_year;
+END;

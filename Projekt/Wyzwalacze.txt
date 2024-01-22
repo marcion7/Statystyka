@@ -1,0 +1,207 @@
+create or replace TRIGGER TRG_DeleteGame
+AFTER DELETE ON Game_sales
+FOR EACH ROW
+BEGIN
+    INSERT INTO game_archive (game_id, game_name, platform_id, publisher_id, developer_id, genre_id, rating_id, na_sales, eu_sales, jp_sales, other_sales, critic_score, critic_count, user_score, user_count, release_date, deletion_date)
+    VALUES (:OLD.game_id, :OLD.game_name, :OLD.publisher_id, :OLD.platform_id, :OLD.developer_id, :OLD.genre_id, :OLD.rating_id, :OLD.na_sales, :OLD.eu_sales, :OLD.jp_sales, :OLD.other_sales, :OLD.critic_score, :OLD.critic_count, :OLD.user_score, :OLD.user_count, :OLD.release_date, SYSDATE);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_CHECK_CRITIC_SRC
+BEFORE INSERT OR UPDATE OF critic_score ON Game_sales
+FOR EACH ROW
+BEGIN
+    IF :NEW.critic_score IS NOT NULL AND (:NEW.critic_score < 0 OR :NEW.critic_score > 100) THEN
+        RAISE_APPLICATION_ERROR(-20001, 'CRITIC_SCORE musi być liczbą od 0 do 100!');
+    END IF;
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_CHECK_USER_SRC
+BEFORE INSERT OR UPDATE OF user_score ON Game_sales
+FOR EACH ROW
+BEGIN
+    IF :NEW.user_score IS NOT NULL AND (:NEW.user_score < 0 OR :NEW.user_score > 10) THEN
+        RAISE_APPLICATION_ERROR(-20001, 'USER_SCORE musi być liczbą od 0 do 10!');
+    END IF;
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER trg_update_annual_summary
+FOR INSERT OR UPDATE OR DELETE ON game_sales
+COMPOUND TRIGGER
+
+  TYPE t_changes IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+  v_old_years t_changes;
+  v_new_years t_changes;
+
+  AFTER EACH ROW IS
+  BEGIN
+    IF INSERTING THEN
+      v_new_years(v_new_years.COUNT+1) := :NEW.release_date;
+    ELSIF UPDATING THEN
+      v_old_years(v_old_years.COUNT+1) := :OLD.release_date;
+      v_new_years(v_new_years.COUNT+1) := :NEW.release_date;
+    ELSIF DELETING THEN
+      v_old_years(v_old_years.COUNT+1) := :OLD.release_date;
+    END IF;
+  END AFTER EACH ROW;
+
+  AFTER STATEMENT IS
+    v_old_count NUMBER;
+    v_new_count NUMBER;
+  BEGIN
+    FOR i IN 1..v_old_years.COUNT LOOP
+      SELECT COUNT(*) INTO v_old_count FROM GAME_SALES_ANNUAL_SUMMARY WHERE YEAR = v_old_years(i);
+      IF v_old_count > 0 THEN
+        EXECUTE IMMEDIATE 'BEGIN ModifyAnnualSummary(' || v_old_years(i) || '); END;';
+      END IF;
+    END LOOP;
+
+    FOR i IN 1..v_new_years.COUNT LOOP
+      SELECT COUNT(*) INTO v_new_count FROM GAME_SALES_ANNUAL_SUMMARY WHERE YEAR = v_new_years(i);
+      IF v_new_count > 0 THEN
+        EXECUTE IMMEDIATE 'BEGIN ModifyAnnualSummary(' || v_new_years(i) || '); END;';
+      END IF;
+    END LOOP;
+  END AFTER STATEMENT;
+END trg_update_annual_summary;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_game_sales_log
+AFTER INSERT OR UPDATE OR DELETE ON GAME_SALES
+FOR EACH ROW
+DECLARE
+  v_username varchar2(50);
+  v_action varchar2(20);
+BEGIN
+  SELECT user INTO v_username FROM dual;
+
+  IF INSERTING THEN
+    v_action := 'Insert';
+  ELSIF UPDATING THEN
+    v_action := 'Update';
+  ELSIF DELETING THEN
+    v_action := 'Delete';
+  END IF;
+
+  INSERT INTO GAME_SALES_LOGS
+  (LOG_ID, LOG_DATE, WHO, ACTION, MODIFIED_TABLE)
+  VALUES
+  (LOG_SEQ.NEXTVAL, SYSDATE, v_username, v_action, 'GAME_SALES');
+END;
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_developers_log
+AFTER INSERT OR UPDATE OR DELETE ON Developers
+FOR EACH ROW
+DECLARE
+  v_username varchar2(50);
+  v_action varchar2(20);
+BEGIN
+  SELECT user INTO v_username FROM dual;
+
+  IF INSERTING THEN
+    v_action := 'Insert';
+  ELSIF UPDATING THEN
+    v_action := 'Update';
+  ELSIF DELETING THEN
+    v_action := 'Delete';
+  END IF;
+
+  INSERT INTO GAME_SALES_LOGS
+  (LOG_ID, LOG_DATE, WHO, ACTION, MODIFIED_TABLE)
+  VALUES
+  (LOG_SEQ.NEXTVAL, SYSDATE, v_username, v_action, 'DEVELOPERS');
+END;
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_genres_log
+AFTER INSERT OR UPDATE OR DELETE ON Genres
+FOR EACH ROW
+DECLARE
+  v_username varchar2(50);
+  v_action varchar2(20);
+BEGIN
+  SELECT user INTO v_username FROM dual;
+
+  IF INSERTING THEN
+    v_action := 'Insert';
+  ELSIF UPDATING THEN
+    v_action := 'Update';
+  ELSIF DELETING THEN
+    v_action := 'Delete';
+  END IF;
+
+  INSERT INTO GAME_SALES_LOGS
+  (LOG_ID, LOG_DATE, WHO, ACTION, MODIFIED_TABLE)
+  VALUES
+  (LOG_SEQ.NEXTVAL, SYSDATE, v_username, v_action, 'GENRES');
+END;
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_platforms_log
+AFTER INSERT OR UPDATE OR DELETE ON Platforms
+FOR EACH ROW
+DECLARE
+  v_username varchar2(50);
+  v_action varchar2(20);
+BEGIN
+  SELECT user INTO v_username FROM dual;
+
+  IF INSERTING THEN
+    v_action := 'Insert';
+  ELSIF UPDATING THEN
+    v_action := 'Update';
+  ELSIF DELETING THEN
+    v_action := 'Delete';
+  END IF;
+
+  INSERT INTO GAME_SALES_LOGS
+  (LOG_ID, LOG_DATE, WHO, ACTION, MODIFIED_TABLE)
+  VALUES
+  (LOG_SEQ.NEXTVAL, SYSDATE, v_username, v_action, 'PLATFORMS');
+END;
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_publishers_log
+AFTER INSERT OR UPDATE OR DELETE ON Publishers
+FOR EACH ROW
+DECLARE
+  v_username varchar2(50);
+  v_action varchar2(20);
+BEGIN
+  SELECT user INTO v_username FROM dual;
+
+  IF INSERTING THEN
+    v_action := 'Insert';
+  ELSIF UPDATING THEN
+    v_action := 'Update';
+  ELSIF DELETING THEN
+    v_action := 'Delete';
+  END IF;
+
+  INSERT INTO GAME_SALES_LOGS
+  (LOG_ID, LOG_DATE, WHO, ACTION, MODIFIED_TABLE)
+  VALUES
+  (LOG_SEQ.NEXTVAL, SYSDATE, v_username, v_action, 'PUBLISHERS');
+END;
+-----------------------------------------------------------------------------
+CREATE OR REPLACE TRIGGER TRG_ratings_log
+AFTER INSERT OR UPDATE OR DELETE ON Ratings
+FOR EACH ROW
+DECLARE
+  v_username varchar2(50);
+  v_action varchar2(20);
+BEGIN
+  SELECT user INTO v_username FROM dual;
+
+  IF INSERTING THEN
+    v_action := 'Insert';
+  ELSIF UPDATING THEN
+    v_action := 'Update';
+  ELSIF DELETING THEN
+    v_action := 'Delete';
+  END IF;
+
+  INSERT INTO GAME_SALES_LOGS
+  (LOG_ID, LOG_DATE, WHO, ACTION, MODIFIED_TABLE)
+  VALUES
+  (LOG_SEQ.NEXTVAL, SYSDATE, v_username, v_action, 'RATINGS');
+END;

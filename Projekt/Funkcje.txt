@@ -1,0 +1,29 @@
+CREATE OR REPLACE FUNCTION CountGamesInYear(year IN NUMBER)
+RETURN NUMBER IS
+  game_count NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO game_count
+  FROM game_sales
+  WHERE EXTRACT(YEAR FROM release_date) = year;
+
+  RETURN game_count;
+END CountGamesInYear;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION TotalSales(g_id IN NUMBER) RETURN NUMBER IS
+        total_sales NUMBER;
+    BEGIN
+    SELECT SUM(na_sales + eu_sales + jp_sales + other_sales) into total_sales
+    FROM game_sales
+    WHERE game_id = g_id;
+    
+    IF total_sales IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Sprzedaż o takim ID nie istnieje');
+    END IF;
+    
+    RETURN total_sales;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20002, 'Brak danych dla podanego ID');
+END;
+/

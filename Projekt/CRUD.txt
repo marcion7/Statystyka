@@ -1,0 +1,271 @@
+CREATE OR REPLACE PROCEDURE AddDeveloper(d_name in VARCHAR2) AS
+    BEGIN
+      INSERT INTO Developers (developer_name) VALUES (d_name);
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Dodano Developera.');
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas dodawania Developera.');
+END;
+/
+------------------------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyDeveloper(d_id IN NUMBER, new_d_name in VARCHAR2) AS
+    v_record_count NUMBER;
+    BEGIN
+    SELECT COUNT(*)
+      INTO v_record_count
+      FROM developers
+      WHERE developer_id = d_id;
+    IF v_record_count = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Developer o ID = ' || d_id || ' nie istnieje.');
+        RETURN;
+    END IF;
+      UPDATE Developers SET developer_name = new_d_name WHERE developer_id = d_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Zmodyfikowano nazwe Developera o ID = ' || d_id);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Gra o ID = ' || d_id || ' nie istnieje.');
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas modyfikowania nazwy Developera o ID = ' || d_id);
+END;
+/
+----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE DeleteDeveloper(d_id IN NUMBER) AS
+    BEGIN
+      DELETE FROM Developers WHERE developer_id = d_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Usunięto developera o ID = ' || d_id);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas usuwania Developera o ID = '|| d_id);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE AddGenre(g_name in VARCHAR2) AS
+    BEGIN
+      INSERT INTO Genres (genre_name) VALUES (g_name);
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Dodano gatunek gry.');
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas dodawania gatunku gry');
+END;
+/
+------------------------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyGenre(g_id IN NUMBER, new_g_name in VARCHAR2) AS
+    v_record_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_record_count
+        FROM genres
+        WHERE genre_id = g_id;
+        IF v_record_count = 0 THEN
+            DBMS_OUTPUT.PUT_LINE('Gatunek o ID = ' || g_id || ' nie istnieje.');
+        RETURN;
+        END IF;
+      UPDATE Genres SET genre_name = new_g_name WHERE genre_id = g_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Zmodyfikowano gatunek gry o ID = ' || g_id);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Gatunek o ID = ' || g_id || ' nie istnieje.');
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas modyfikowania gatunku gry o ID = ' || g_id);
+END;
+/
+----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE DeleteGenre(g_id IN NUMBER) AS
+    BEGIN
+      DELETE FROM Genres WHERE genre_id = g_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Usunięto gatunek gry o ID = ' || g_id);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas usuwania gatunku gry o ID = '|| g_id);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE AddPublisher(p_name in VARCHAR2) AS
+    BEGIN
+      INSERT INTO Publishers (publisher_name) VALUES (p_name);
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Dodano Wydawcę.');
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas dodawania Wydawcy.');
+END;
+/
+------------------------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyPublisher(p_id IN NUMBER, new_p_name in VARCHAR2) AS
+    v_record_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_record_count
+        FROM publishers
+        WHERE publisher_id = p_id;
+        IF v_record_count = 0 THEN
+            DBMS_OUTPUT.PUT_LINE('Wydawca o ID = ' || p_id || ' nie istnieje.');
+        RETURN;
+        END IF;
+      UPDATE Publishers SET publisher_name = new_p_name WHERE publisher_id = p_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Zmodyfikowano Wydawcę o ID = ' || p_id);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Wydawca o ID = ' || p_id || ' nie istnieje.');
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas modyfikowania Wydawcy o ID = ' || p_id);
+END;
+/
+----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE DeletePublisher(p_id IN NUMBER) AS
+    BEGIN
+      DELETE FROM Publishers WHERE publisher_id = p_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Usunięto wydawcę o ID = ' || p_id);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas usuwania wydawcy o ID = '|| p_id);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE AddPlatform(p_name in VARCHAR2) AS
+    BEGIN
+      INSERT INTO Platforms (platform_name) VALUES (p_name);
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Dodano Platformę.');
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas dodawania Platformy.');
+END;
+/
+------------------------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyPlatform(p_id IN NUMBER, new_p_name in VARCHAR2) AS
+    v_record_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_record_count
+        FROM platforms
+        WHERE platform_id = p_id;
+        IF v_record_count = 0 THEN
+            DBMS_OUTPUT.PUT_LINE('Platforma o ID = ' || p_id || ' nie istnieje.');
+        RETURN;
+        END IF;
+      UPDATE Platforms SET platform_name = new_p_name WHERE platform_id = p_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Zmodyfikowano Platforme o ID = ' || p_id);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Platforma o ID = ' || p_id || ' nie istnieje.');
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas modyfikowania Platformy o ID = ' || p_id);
+END;
+/
+----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE DeletePlatform(p_id IN NUMBER) AS
+    BEGIN
+      DELETE FROM Platforms WHERE platform_id = p_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Usunięto Platformę o ID = ' || p_id);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas usuwania Platfomy o ID = '|| p_id);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE AddRating(r_name IN VARCHAR2) AS
+BEGIN
+  INSERT INTO Ratings (rating_name) VALUES (r_name);
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Dodano Rating.');
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Błąd podczas dodawania Ratingu.');
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyRating(r_id IN NUMBER, new_r_name IN VARCHAR2) AS
+  v_record_count NUMBER;
+BEGIN
+  SELECT COUNT(*)
+    INTO v_record_count
+    FROM ratings
+    WHERE rating_id = r_id;
+  IF v_record_count = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('Rating o ID = ' || r_id || ' nie istnieje.');
+    RETURN;
+  END IF;
+  UPDATE Ratings SET rating_name = new_r_name WHERE rating_id = r_id;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Zmodyfikowano nazwe Ratingu o ID = ' || r_id);
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('Rating o ID = ' || r_id || ' nie istnieje.');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Błąd podczas modyfikowania nazwy Ratingu o ID = ' || r_id);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE DeleteRating(r_id IN NUMBER) AS
+BEGIN
+  DELETE FROM Ratings WHERE rating_id = r_id;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Usunięto Rating o ID = ' || r_id);
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Błąd podczas usuwania Rating o ID = '|| r_id);
+END;
+/
+-----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE AddGame(g_name in VARCHAR2, pl_id in NUMBER, pu_id in NUMBER, d_id in NUMBER, ge_id in NUMBER, na_s in NUMBER, eu_s in NUMBER, jp_s in NUMBER, other_s in NUMBER, critic_scr in NUMBER, r_date in DATE) AS
+    PRAGMA AUTONOMOUS_TRANSACTION;
+    v_error_message VARCHAR2(4000);
+    BEGIN
+      INSERT INTO Game_Sales (game_name, platform_id, publisher_id, developer_id, genre_id, na_sales, eu_sales, jp_sales, other_sales, critic_score, release_date) VALUES (g_name, pl_id, pu_id , d_id, ge_id, na_s, eu_s, jp_s , other_s, critic_scr, r_date);
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Dodano Grę');
+    EXCEPTION
+      WHEN OTHERS THEN
+        v_error_message := SQLERRM;
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas dodawnia Gry');
+        DBMS_OUTPUT.PUT_LINE(v_error_message);
+END;
+/
+------------------------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE ModifyGame(g_id in NUMBER, g_name in VARCHAR2, pl_id in NUMBER, pu_id in NUMBER, d_id in NUMBER, ge_id in NUMBER, na_s in NUMBER, eu_s in NUMBER, jp_s in NUMBER, other_s in NUMBER, critic_scr in NUMBER, r_date in DATE) AS
+    PRAGMA AUTONOMOUS_TRANSACTION;
+    v_error_message VARCHAR2(4000);
+    v_record_count NUMBER;
+    BEGIN
+      SELECT COUNT(*)
+      INTO v_record_count
+      FROM Game_sales
+      WHERE game_id = g_id;
+    IF v_record_count = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('Gra o ID = ' || g_id || ' nie istnieje.');
+        RETURN;
+    END IF;
+      UPDATE Game_sales SET game_name = g_name, platform_id = pl_id, publisher_id = pu_id, developer_id = d_id, genre_id = ge_id, na_sales = na_s, eu_sales = eu_s, jp_sales = jp_s, other_sales = other_s, critic_score = critic_scr, release_date = r_date WHERE game_id = g_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Zmodyfikowano Grę o ID = ' || g_id);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Gra o ID = ' || g_id || ' nie istnieje.');
+      WHEN OTHERS THEN
+        v_error_message := SQLERRM;        
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas modyfikowania Gry o ID = ' || g_id);
+        DBMS_OUTPUT.PUT_LINE(v_error_message);
+END;
+/
+----------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE DeleteGame(g_id IN NUMBER) AS
+    BEGIN
+      DELETE FROM Game_Sales WHERE game_id = g_id;
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('Usunięto Gry o ID = ' || g_id);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Błąd podczas usuwania Gry o ID = '|| g_id);
+END;
+/
